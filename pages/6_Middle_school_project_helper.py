@@ -34,7 +34,7 @@ if prompt := st.chat_input():
         st.stop()
 
     genai.configure(api_key=google_api_key)
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    model = genai.GenerativeModel("gemini-2.0-flash")
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
     prompt_text = "\n".join(
@@ -58,7 +58,7 @@ if (
         st.info("Please add your Google API key to continue.")
         st.stop()
     genai.configure(api_key=google_api_key)
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    model = genai.GenerativeModel("gemini-2.0-flash")
     summary_messages = st.session_state.messages + [
         {
             "role": "user",

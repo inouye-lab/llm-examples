@@ -1,6 +1,28 @@
 import datetime
+import sys
+from types import SimpleNamespace
 from unittest.mock import patch
 from streamlit.testing.v1 import AppTest
+
+
+class _FakeGenerativeModel:
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def generate_content(self, prompt):
+        return MockResponse("stub")
+
+
+def _fake_configure(api_key=None):
+    pass
+
+if "google.generativeai" not in sys.modules:
+    stub = SimpleNamespace(
+        GenerativeModel=_FakeGenerativeModel, configure=_fake_configure
+    )
+    google_mod = sys.modules.setdefault("google", SimpleNamespace())
+    google_mod.generativeai = stub
+    sys.modules["google.generativeai"] = stub
 
 class MockResponse:
     def __init__(self, text):

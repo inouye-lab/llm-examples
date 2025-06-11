@@ -1,9 +1,9 @@
-from openai import OpenAI
+import google.generativeai as genai
 import streamlit as st
 
 with st.sidebar:
-    openai_api_key = st.text_input("OpenAI API Key", key="project_helper_api_key", type="password")
-    "[Get an OpenAI API key](https://platform.openai.com/account/api-keys)"
+    google_api_key = st.text_input("Google API Key", key="project_helper_api_key", type="password")
+    "[Get a Google API key](https://makersuite.google.com/app/apikey)"
     "[View the source code](https://github.com/streamlit/llm-examples/blob/main/pages/6_Middle_school_project_helper.py)"
     "[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/streamlit/llm-examples?quickstart=1)"
 
@@ -29,15 +29,19 @@ for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
 if prompt := st.chat_input():
-    if not openai_api_key:
-        st.info("Please add your OpenAI API key to continue.")
+    if not google_api_key:
+        st.info("Please add your Google API key to continue.")
         st.stop()
 
-    client = OpenAI(api_key=openai_api_key)
+    genai.configure(api_key=google_api_key)
+    model = genai.GenerativeModel("gemini-2.5-flash")
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
-    response = client.chat.completions.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
-    msg = response.choices[0].message.content
+    prompt_text = "\n".join(
+        f"{m['role']}: {m['content']}" for m in st.session_state.messages
+    )
+    response = model.generate_content(prompt_text)
+    msg = response.text
     st.session_state.messages.append({"role": "assistant", "content": msg})
     st.chat_message("assistant").write(msg)
 
@@ -50,10 +54,11 @@ if (
     st.session_state.get("summary") is None
     and summary_button_placeholder.button("I'm excited about this topic", key="excited_button")
 ):
-    if not openai_api_key:
-        st.info("Please add your OpenAI API key to continue.")
+    if not google_api_key:
+        st.info("Please add your Google API key to continue.")
         st.stop()
-    client = OpenAI(api_key=openai_api_key)
+    genai.configure(api_key=google_api_key)
+    model = genai.GenerativeModel("gemini-2.5-flash")
     summary_messages = st.session_state.messages + [
         {
             "role": "user",
@@ -63,10 +68,9 @@ if (
             ),
         }
     ]
-    summary_response = client.chat.completions.create(
-        model="gpt-3.5-turbo", messages=summary_messages
-    )
-    summary = summary_response.choices[0].message.content
+    prompt_text = "\n".join(f"{m['role']}: {m['content']}" for m in summary_messages)
+    summary_response = model.generate_content(prompt_text)
+    summary = summary_response.text
     st.session_state["summary"] = summary
     summary_button_placeholder.empty()
     st.write("### Final Topic")

@@ -10,13 +10,17 @@ with st.sidebar:
 st.title("🧑‍🎓 Middle School Project Helper")
 st.caption("💡 A chatbot for brainstorming project ideas")
 
+if "summary" not in st.session_state:
+    st.session_state["summary"] = None
+
 if "messages" not in st.session_state:
     st.session_state["messages"] = [
         {
             "role": "assistant",
             "content": (
-                "Hi there! I'm here to help you find an interesting topic for your middle school project. "
-                "What subjects or hobbies do you enjoy?"
+                "Hello! I'm ProjectPro, your friendly AI research buddy. "
+                "I once helped organize a school science fair and love turning curiosity into exciting projects. "
+                "Tell me a bit about what you enjoy or any ideas you already have."
             ),
         }
     ]
@@ -36,3 +40,29 @@ if prompt := st.chat_input():
     msg = response.choices[0].message.content
     st.session_state.messages.append({"role": "assistant", "content": msg})
     st.chat_message("assistant").write(msg)
+
+if st.session_state.get("summary"):
+    st.write("### Final Topic")
+    st.write(st.session_state["summary"])
+
+if st.session_state.get("summary") is None and st.button("I'm excited about this topic"):
+    if not openai_api_key:
+        st.info("Please add your OpenAI API key to continue.")
+        st.stop()
+    client = OpenAI(api_key=openai_api_key)
+    summary_messages = st.session_state.messages + [
+        {
+            "role": "user",
+            "content": (
+                "Please summarize the project idea we've discussed in 2-3 paragraphs suitable "
+                "for a middle school student."
+            ),
+        }
+    ]
+    summary_response = client.chat.completions.create(
+        model="gpt-3.5-turbo", messages=summary_messages
+    )
+    summary = summary_response.choices[0].message.content
+    st.session_state["summary"] = summary
+    st.write("### Final Topic")
+    st.write(summary)

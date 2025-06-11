@@ -1,11 +1,11 @@
-from openai import OpenAI
+import google.generativeai as genai
 import streamlit as st
 from streamlit_feedback import streamlit_feedback
 import trubrics
 
 with st.sidebar:
-    openai_api_key = st.text_input("OpenAI API Key", key="feedback_api_key", type="password")
-    "[Get an OpenAI API key](https://platform.openai.com/account/api-keys)"
+    google_api_key = st.text_input("Google API Key", key="feedback_api_key", type="password")
+    "[Get a Google API key](https://makersuite.google.com/app/apikey)"
     "[View the source code](https://github.com/streamlit/llm-examples/blob/main/pages/5_Chat_with_user_feedback.py)"
     "[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/streamlit/llm-examples?quickstart=1)"
 
@@ -31,12 +31,14 @@ if prompt := st.chat_input(placeholder="Tell me a joke about sharks"):
     messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
 
-    if not openai_api_key:
-        st.info("Please add your OpenAI API key to continue.")
+    if not google_api_key:
+        st.info("Please add your Google API key to continue.")
         st.stop()
-    client = OpenAI(api_key=openai_api_key)
-    response = client.chat.completions.create(model="gpt-3.5-turbo", messages=messages)
-    st.session_state["response"] = response.choices[0].message.content
+    genai.configure(api_key=google_api_key)
+    model = genai.GenerativeModel("gemini-2.5-flash")
+    prompt_text = "\n".join(f"{m['role']}: {m['content']}" for m in messages)
+    response = model.generate_content(prompt_text)
+    st.session_state["response"] = response.text
     with st.chat_message("assistant"):
         messages.append({"role": "assistant", "content": st.session_state["response"]})
         st.write(st.session_state["response"])
@@ -57,7 +59,7 @@ if st.session_state["response"]:
         )
         collection = trubrics.collect(
             component_name="default",
-            model="gpt",
+            model="gemini-2.5-flash",
             response=feedback,
             metadata={"chat": messages},
         )

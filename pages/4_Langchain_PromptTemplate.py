@@ -1,29 +1,26 @@
 import streamlit as st
-from langchain.llms import OpenAI
-from langchain.prompts import PromptTemplate
+import google.generativeai as genai
 
-st.title("🦜🔗 Langchain - Blog Outline Generator App")
+st.title("🦜🔗 Blog Outline Generator App")
 
-openai_api_key = st.sidebar.text_input("OpenAI API Key", type="password")
+google_api_key = st.sidebar.text_input("Google API Key", type="password")
 
 
-def blog_outline(topic):
-    # Instantiate LLM model
-    llm = OpenAI(model_name="text-davinci-003", openai_api_key=openai_api_key)
-    # Prompt
-    template = "As an experienced data scientist and technical writer, generate an outline for a blog about {topic}."
-    prompt = PromptTemplate(input_variables=["topic"], template=template)
-    prompt_query = prompt.format(topic=topic)
-    # Run LLM model
-    response = llm(prompt_query)
-    # Print results
-    return st.info(response)
+def blog_outline(topic: str):
+    genai.configure(api_key=google_api_key)
+    model = genai.GenerativeModel("gemini-2.5-flash")
+    template = (
+        "As an experienced data scientist and technical writer, generate an outline for a blog about {topic}."
+    )
+    prompt = template.format(topic=topic)
+    response = model.generate_content(prompt)
+    return st.info(response.text)
 
 
 with st.form("myform"):
     topic_text = st.text_input("Enter prompt:", "")
     submitted = st.form_submit_button("Submit")
-    if not openai_api_key:
-        st.info("Please add your OpenAI API key to continue.")
+    if not google_api_key:
+        st.info("Please add your Google API key to continue.")
     elif submitted:
         blog_outline(topic_text)

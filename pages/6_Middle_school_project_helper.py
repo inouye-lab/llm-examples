@@ -49,7 +49,11 @@ if st.session_state.get("summary"):
     st.write("### Final Topic")
     st.write(st.session_state["summary"])
 
-if st.session_state.get("summary") is None and st.button("I'm excited about this topic"):
+summary_button_placeholder = st.empty()
+if (
+    st.session_state.get("summary") is None
+    and summary_button_placeholder.button("I'm excited about this topic", key="excited_button")
+):
     if not google_api_key:
         st.info("Please add your Google API key to continue.")
         st.stop()
@@ -68,5 +72,6 @@ if st.session_state.get("summary") is None and st.button("I'm excited about this
     summary_response = model.generate_content(prompt_text)
     summary = summary_response.text
     st.session_state["summary"] = summary
+    summary_button_placeholder.empty()
     st.write("### Final Topic")
     st.write(summary)
